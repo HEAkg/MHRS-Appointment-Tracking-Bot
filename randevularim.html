@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% block title %} Randevu Formu {% endblock %}
+
+{% block style %}
+
+body{
+display: flex;
+}
+
+.container{
+display: flex;
+flex-direction: column;
+width: 100%;
+height: 100%;
+}
+
+#my_appointments{
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+align-items: center;
+text-align: center;
+width: 100%;
+height: 100%;
+margin-bottom: 5%;
+}
+
+.my_appointment{
+display: flex;
+flex-wrap: wrap;
+justify-content: center;
+align-items: center;
+width: 45%;
+margin: 1%;
+border: 5px double #3cb854;
+}
+
+.my_appointment:hover{
+background-color: #aaffd296;
+transition: 0.6s ease-out;
+}
+
+.app-info, .cancel-div{
+width: 45%;
+padding: 2.5%;
+}
+
+#time{
+font-weight: bold;
+}
+
+#cancel-form button[type='submit']{
+width: 5rem;
+color: white;
+background-color: #d9534f;
+font-size: 14px;
+padding: 10px 8px;
+border: none;
+border-radius: 4px;
+}
+
+#cancel-form button[type='submit']:hover{
+background-color: #ee5551d6;
+cursor: pointer;
+}
+
+h1{
+margin: 1em;
+text-align: center;
+color: #d64343;
+}
+
+.toast {
+visibility: hidden;
+min-width: 200px;
+max-width: 400px;
+background-color: #1c8bc4;
+color: white;
+text-align: center;
+border-radius: 8px;
+padding: 16px;
+position: fixed;
+z-index: 1;
+left: 50%;
+bottom: 30px;
+transform: translateX(-50%);
+font-size: 1em;
+box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+}
+
+.toast.show {
+visibility: visible;
+animation: fadein 1s, fadeout 0.5s 2.5s;
+}
+
+@keyframes fadein {
+from {bottom: 0; opacity: 0;}
+to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes fadeout {
+from {bottom: 30px; opacity: 1;}
+to {bottom: 0; opacity: 0;}
+}
+
+{% endblock %}
+
+{% block content %}
+
+{% include "sidebar.html" %}
+
+{% include "logout.html" %}
+
+<div class="container">
+    <h1>RANDEVULARIM</h1>
+    <div id="my_appointments">
+        {% for active_appointment in active_appointments %}
+        <div class="my_appointment">
+            <span class="app-info" id="time">{{ active_appointment.randevuBaslangicZamaniStr.zaman }}</span>
+            <span class="app-info" id="hospital">{{ active_appointment.kurumAdi }}</span>
+            <span class="app-info" id="clinic">{{ active_appointment.mhrsKlinikAdi }}</span>
+            <span class="app-info" id="examination">{{ active_appointment.muayeneYeriAdi }}</span>
+            <span class="app-info" id="doctor">{{ active_appointment.mhrsHekimAd ~ ' ' ~ active_appointment.mhrsHekimSoyad }}</span>
+            <div class="cancel-div">
+                <form id="cancel-form" method="POST">
+                    <button type="submit" name="appointment_no" value="{{ active_appointment.hastaRandevuNumarasi }}">İptal Et</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if message %}
+<div id="toast" class="toast">{{ message }}</div>
+<script>
+    window.onload = function() {
+    const toast = document.getElementById("toast");
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 3000);
+    }
+</script>
+{% endif %}
+
+{% endblock %}

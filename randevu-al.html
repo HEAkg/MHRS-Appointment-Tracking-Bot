@@ -1,0 +1,647 @@
+{% extends 'base.html' %}
+
+{% block title %} Randevu Formu {% endblock %}
+
+{% block style %}
+
+body {
+display: flex;
+}
+
+.container {
+display: flex;
+flex-direction: column;
+height: 100%;
+width: 100%;
+}
+
+h2#title {
+color: #d64343;
+font-size: 2.25rem;
+text-align: center;
+}
+
+.content {
+display: flex;
+height: 100%;
+margin-top: 10px;
+}
+
+#search-block {
+display: flex;
+flex-direction: column;
+justify-content: center;
+}
+
+#result-block{
+margin: 0 15px;
+}
+
+.input-block {
+display: flex;
+align-items: center;
+font-size: 1.1rem;
+margin: 15px;
+}
+
+.input-block label {
+width: 120px;
+text-align: right;
+margin-right: 12px;
+}
+
+.input-block select {
+flex: 1;
+width: 170px;
+background-color: rgb(218, 252, 240);
+border-radius: 3px;
+padding: 4px;
+}
+
+.input-block select::-webkit-scrollbar {
+width: 8px;
+}
+
+.input-block select::-webkit-scrollbar-thumb {
+background-color: #888;
+border-radius: 5px;
+margin: 4px;
+}
+
+.input-block input[type="checkbox"] {
+accent-color: #d64343;
+transform: scale(1.25);
+}
+
+.input-block:has(input[type="submit"]) {
+display: flex;
+justify-content: center;
+width: 100%;
+}
+
+.input-block input[type="submit"] {
+border: none;
+font-size: 1rem;
+padding: 12px 18px;
+background-color: #52be7f;
+border-radius: 5px;
+color: white;
+cursor: pointer;
+}
+
+.input-block input[type="submit"]:hover {
+background-color: #01a887;
+box-shadow: 0 0 3px grey inset;
+transition: 0.3s ease;
+}
+
+section {
+height: 100%;
+}
+
+.table-content {
+height: 500px;
+overflow-x:auto;
+}
+
+table {
+table-layout: fixed;
+width: 100%;
+border-collapse: collapse;
+margin: 2px 0;
+font-size: 0.8rem;
+min-width: 400px;
+box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+border-radius: 10px;
+overflow: hidden;
+font-family: "Arial";
+}
+
+table thead tr {
+background-color: #01a887;
+color: #ffffff;
+text-align: left;
+font-weight: bold;
+}
+
+table th:nth-of-type(n + 1):nth-of-type(-n + 3),
+table td:nth-of-type(n + 1):nth-of-type(-n + 3),
+table th:last-of-type,
+table td:last-of-type{
+width: 9%;
+}
+
+table th:nth-last-of-type(2),
+table td:nth-last-of-type(2){
+width: 6%;
+}
+
+table th {
+padding: 12px 13px;
+}
+
+table td {
+padding: 12px 13px;
+}
+
+table td:last-of-type{
+text-align: center;
+}
+
+table tbody tr {
+border-bottom: 1px solid #dddddd;
+line-height: 1rem;
+}
+
+table tbody tr:nth-of-type(even) {
+background-color: #f3f3f3;
+}
+
+table tbody tr:last-of-type {
+border-bottom: 2px solid #01a887;
+}
+
+table tbody tr:hover {
+background-color: #def4f7;
+color: #01a887;
+}
+
+table caption {
+font-size: 1.75rem;
+margin-bottom: 10px;
+font-weight: bold;
+color: #333;
+}
+
+table input[type="submit"]{
+padding: 5px 12px;
+background-color: #3cb854;
+color: white;
+border: none;
+border-radius: 4px;
+}
+
+#empty-result {
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+}
+
+#check-bot-form{
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+margin: 2em 0 1em 0;
+}
+
+#check-bot-form label{
+width: 100%;
+}
+
+#empty-result h4{
+width: 90%;
+margin: 0;
+}
+
+#hour-popup {
+display: none;
+width: 100%;
+height: 100%;
+position: fixed;
+}
+
+.overlay{
+display: block;
+position: fixed;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.5);
+z-index: 999;
+}
+
+#hourModal {
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+text-align: center;
+width: 40%;
+position: fixed;
+top: 50%;
+left: 50%;
+transform: translate(-50%, -50%);
+background: white;
+padding: 10px 20px 20px 20px;
+border: 1px solid rgb(204, 204, 204);
+border-radius: 10px;
+box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+z-index: 1000;
+max-height: 80%;
+}
+
+#hour-options label {
+padding: 0 2px;
+}
+
+#select-hour-form{
+overflow-y: scroll;
+}
+
+.flash{
+background-color: #3cb854;
+}
+
+{% endblock %}
+
+{% block content %}
+
+{% include "sidebar.html" %}
+
+{% include "logout.html" %}
+
+<div class="container">
+    <h2 id="title">RANDEVU</h2>
+    <div class="content">
+        <div id="search-block">
+            <form id="search" method="post">
+                <div class="input-block">
+                    <label for="city"><b style="color: #d64343;">*</b>Şehir: </label>
+                    <select required id="city" name="city" onchange="this.form.submit()">
+                        <option value="" selected disabled>İl Seçiniz...</option>
+                        {% for city in cities %}
+                        {% if city[1] | string == selected_city %}
+                        <option value="{{ city[1] }}" selected>{{ city[0] }}</option>
+                        {% else %}
+                        <option value="{{ city[1] }}">{{ city[0] }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-block">
+                    <label for="district">İlçe: </label>
+                    <select id="district" name="district" onchange="this.form.submit()">
+                        {% if selected_city %}
+                        {% if selected_district == -1 %}
+                        <option value="-1" selected>-- Fark etmez --</option>
+                        {% else %}
+                        <option value="-1">-- Fark etmez --</option>
+                        {% endif %}
+                        {% else %}
+                        <option value="-1" selected disabled>-- Fark etmez --</option>
+                        {% endif %}
+                        {% for district in districts %}
+                        {% if district[1] | string == selected_district %}
+                        <option value="{{ district[1] }}" selected>{{ district[0] }}</option>
+                        {% else %}
+                        <option value="{{ district[1] }}">{{ district[0] }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-block">
+                    <label for="clinic"><b style="color: #d64343;">*</b>Klinik: </label>
+                    <select required id="clinic" name="clinic" onchange="this.form.submit()">
+                        <option value="" selected disabled>Klinik Seçiniz...</option>
+                        {% for clinic in clinics %}
+                        {% if clinic[1] | string == selected_clinic %}
+                        <option value="{{ clinic[1] }}" selected>{{ clinic[0] }}</option>
+                        {% else %}
+                        <option value="{{ clinic[1] }}">{{ clinic[0] }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-block">
+                    <label for="hospital">Hastane: </label>
+                    <select id="hospital" name="hospital" onchange="this.form.submit()">
+                        {% if selected_city and selected_clinic %}
+                        {% if selected_hospital == -1 %}
+                        <option value="-1" selected>-- Fark etmez --</option>
+                        {% else %}
+                        <option value="-1">-- Fark etmez --</option>
+                        {% endif %}
+                        {% else %}
+                        <option value="-1" selected disabled>-- Fark etmez --</option>
+                        {% endif %}
+                        {% for hospital in hospitals %}
+                        {% if hospital[1] | string == selected_hospital %}
+                        <option value="{{ hospital[1] }}" selected>{{ hospital[0] }}</option>
+                        {% else %}
+                        <option value="{{ hospital[1] }}">{{ hospital[0] }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-block">
+                    <label for="examination">Muayene Yeri: </label>
+                    <select id="examination" name="examination" onchange="this.form.submit()">
+                        {% if selected_city and selected_clinic and selected_hospital != -1 %}
+                        {% if selected_examination == -1 %}
+                        <option value="-1" selected>-- Fark etmez --</option>
+                        {% else %}
+                        <option value="-1">-- Fark etmez --</option>
+                        {% endif %}
+                        {% else %}
+                        <option value="-1" selected disabled>-- Fark etmez --</option>
+                        {% endif %}
+                        {% for examination in examinations %}
+                        {% if examination[1] | string == selected_examination %}
+                        <option value="{{ examination[1] }}" selected>{{ examination[0] }}</option>
+                        {% else %}
+                        <option value="{{ examination[1] }}">{{ examination[0] }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-block">
+                    <label for="doctor">Doktor: </label>
+                    <select id="doctor" name="doctor" onchange="this.form.submit()">
+                        {% if selected_city and selected_clinic and selected_hospital != -1 %}
+                        {% if selected_doctor == -1 %}
+                        <option value="-1" selected>-- Fark etmez --</option>
+                        {% else %}
+                        <option value="-1">-- Fark etmez --</option>
+                        {% endif %}
+                        {% else %}
+                        <option value="-1" selected disabled>-- Fark etmez --</option>
+                        {% endif %}
+                        {% for doctor in doctors %}
+                        {% if doctor[1] | string == selected_doctor %}
+                        <option value="{{ doctor[1] }}" selected>{{ doctor[0] }}</option>
+                        {% else %}
+                        <option value="{{ doctor[1] }}">{{ doctor[0] }}</option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="input-block">
+                    <label for="start_date">Başlangıç Tarihi: </label>
+                    {% if selected_start_date %}
+                    <input type="date" id="start_date" name="start_date" placeholder="Başlangıç Zamanı Seçiniz"
+                           value="{{ selected_start_date }}">
+                    {% else %}
+                    <input type="date" id="start_date" name="start_date" placeholder="Başlangıç Zamanı Seçiniz">
+                    {% endif %}
+                </div>
+                <div class="input-block">
+                    <label for="end_date">Bitiş Tarihi: </label>
+                    {% if selected_end_date %}
+                    <input type="date" id="end_date" name="end_date" placeholder="Bitiş Zamanı Seçiniz"
+                           value="{{ selected_end_date }}">
+                    {% else %}
+                    <input disabled type="date" id="end_date" name="end_date" placeholder="Bitiş Zamanı Seçiniz">
+                    {% endif %}
+                </div>
+                <div class="input-block">
+                    <input type="submit" name="search" value="Ara">
+                </div>
+            </form>
+        </div>
+
+        <section id="result-block">
+            <div class="table-header">
+                <table border="1">
+                    <caption>RANDEVULAR</caption>
+                    <thead>
+                    <tr>
+                        <th>Şehir</th>
+                        <th>İlçe</th>
+                        <th>Klinik</th>
+                        <th>Hastane</th>
+                        <th>Muayene Yeri</th>
+                        <th>Doktor</th>
+                        <th>Tarih</th>
+                        <th>Randevu Seç</th>
+                    </tr>
+                    </thead>
+                </table>
+            </div>
+            <div class="table-content">
+                {% if appointments %}
+                <table>
+                    <tbody>
+                    {% for appointment in appointments %}
+                    <tr>
+                        <td>
+                            <form id="form{{loop.index}}" method="POST"><input type="hidden" name="r-city"
+                                                                               value="{{ appointment.kurum.ilIlce.mhrsIlId }}">
+                            </form>
+                            {{ appointment.kurum.ilIlce.ilAdi }}
+                        </td>
+                        <td>{{ appointment.kurum.ilIlce.ilceAdi }}</td>
+                        <td><input form="form{{loop.index}}" type="hidden" name="r-clinic"
+                                   value="{{ appointment.klinik.mhrsKlinikId }}">{{ appointment.klinik.mhrsKlinikAdi }}
+                        </td>
+                        <td><input form="form{{loop.index}}" type="hidden" name="r-hospital"
+                                   value="{{ appointment.kurum.mhrsKurumId }}">{{ appointment.kurum.kurumAdi }}
+                        </td>
+                        <td><input form="form{{loop.index}}" type="hidden" name="r-examination"
+                                   value="{{ appointment.muayeneYeri.id }}">{{ appointment.muayeneYeri.adi }}
+                        </td>
+                        <td><input form="form{{loop.index}}" type="hidden" name="r-doctor"
+                                   value="{{ appointment.hekim.mhrsHekimId }}">{{ appointment.hekim.ad ~ ' ' ~
+                            appointment.hekim.soyad }}
+                        </td>
+                        <td>{{ appointment.baslangicZamaniStr.tarih }}</td>
+                        <td><input form="form{{loop.index}}" type="submit" name="appointment" value="Seç"></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div id="empty-result">
+                    <h3>SONUÇ YOK</h3>
+                    {% if searched %}
+                    <form id="check-bot-form" method="POST">
+                        <div id="form-copy" hidden>
+                            <input type="hidden" name="check_city" value="{{ selected_city }}">
+                            <input type="hidden" name="check_city_text">
+                            <input type="hidden" name="check_district" value="{{ selected_district }}">
+                            <input type="hidden" name="check_district_text">
+                            <input type="hidden" name="check_clinic" value="{{ selected_clinic }}">
+                            <input type="hidden" name="check_clinic_text">
+                            <input type="hidden" name="check_hospital" value="{{ selected_hospital }}">
+                            <input type="hidden" name="check_hospital_text">
+                            <input type="hidden" name="check_examination" value="{{ selected_examination }}">
+                            <input type="hidden" name="check_examination_text">
+                            <input type="hidden" name="check_doctor" value="{{ selected_doctor }}">
+                            <input type="hidden" name="check_doctor_text">
+                            <input type="hidden" name="check_start_date" value="{{ selected_start_date if selected_start_date }}">
+                            <input type="hidden" name="check_end_date" value="{{ selected_end_date if selected_end_date }}">
+                        </div>
+                        <div class="input-block">
+                            <label for="email">E-posta (opsiyonel):</label>
+                            <input type="email" name="email" id="email" placeholder="E-posta adresi">
+                        </div>
+                        <div class="input-block">
+                            <label for="earliest">En erken randevuyu al</label>
+                            <input type="checkbox" name="earliest" id="earliest">
+                        </div>
+                        <div class="input-block">
+                            <label for="interval">Kontrol etme aralığı (dk.):</label>
+                            <input required type="number" min="5" max="1440" name="interval" id="interval"
+                                   placeholder="5-1440" value="{{ interval if interval is not none else 10 }}">
+                        </div>
+                        <div class="input-block">
+                            <input type="submit" name="start_check" value="Randevu Talebi Oluştur">
+                        </div>
+                    </form>
+                    <h4 style="text-align: center;">NOT: Aradığınız randevu filtreleri dahilinde en yakın randevu
+                        bulunduğunda uyarı bildirimi verilecektir. Eğer "En erken randevuyu al" seçeneğini
+                        işaretlerseniz uyarı bildirimiyle birlikte en yakın randevu otomatik olarak alınır. Alınan
+                        randevuyu sol tarafta yer alan "Randevularım" sayfasında görüntüleyebilirsiniz.</h4>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+</div>
+<div id="hour-popup">
+    <div class="overlay"></div>
+    <div id="hourModal">
+        <h3>Randevu Saatleri</h3>
+        <form id="select-hour-form" method="POST">
+            <div id="hour-options"></div>
+            <button type="submit" name="make_appointment"
+                    style="padding: 5px 12px; background-color: #3cb854; color: white; margin: 12px 12px 5px 12px; border: none; border-radius: 4px;">
+                Seç
+            </button>
+            <button type="button"
+                    style="padding: 5px 10px; background-color: #d9534f; color: white; margin: 12px 12px 5px 12px; border: none; border-radius: 4px;"
+                    onclick="document.getElementById('hour-popup').style.display='none';">Kapat
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    const today = new Date();
+    const startInput = document.getElementById('start_date');
+    const endInput = document.getElementById('end_date');
+
+    const maxStartDate = new Date();
+    maxStartDate.setDate(today.getDate() + 16);
+
+    function formatDate(date) {
+        return date.toISOString().split('T')[0];
+    }
+
+    function enableEndDate(startDateStr) {
+        const selectedStart = new Date(startDateStr);
+        const maxEndDate = new Date(selectedStart);
+        maxEndDate.setDate(today.getDate() + 16);
+
+        endInput.disabled = false;
+        endInput.min = formatDate(selectedStart);
+        endInput.max = formatDate(maxEndDate);
+
+        if (endInput.value && (endInput.value < endInput.min || endInput.value > endInput.max)) {
+            endInput.value = '';
+        }
+    }
+
+    startInput.min = formatDate(today);
+    startInput.max = formatDate(maxStartDate);
+
+    window.addEventListener('DOMContentLoaded', () => {
+        if (startInput.value) {
+            enableEndDate(startInput.value);
+        }
+    });
+
+    startInput.addEventListener('change', function () {
+        if (startInput.value) {
+            enableEndDate(startInput.value);
+        } else {
+            endInput.disabled = true;
+            endInput.value = '';
+        }
+    });
+</script>
+
+<script>
+    function showModal(hours) {
+        const container = document.getElementById('hour-options');
+        container.innerHTML = '';
+        const grouped = {};
+
+        hours.forEach(([day, [id, hour]]) => {
+            if (!grouped[day]) grouped[day] = [];
+            grouped[day].push([id, hour]);
+        });
+
+        for (const day in grouped) {
+            const date = `<h4>${day}</h4>`;
+            container.innerHTML += date;
+            grouped[day].forEach(([id, hour]) => {
+                const radio = `<input required type='radio' id='${id}' name='hour' value='${id}'><label for='${id}'>${hour}</label>`;
+                container.innerHTML += radio;
+            });
+            container.innerHTML += `<hr>`;
+        }
+        document.getElementById('hour-popup').style.display = 'block';
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('input[name="appointment"]').forEach(button => {
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const formId = this.getAttribute('form');
+            const form = document.getElementById(formId);
+            if (!form) {
+                console.error("Form bulunamadı!");
+                return;
+            }
+
+            const formData = new FormData(form);
+            formData.append('appointment', '1');
+
+            fetch('/randevu-al', {
+                method: 'POST',
+                body: formData
+            }).then(res => res.json())
+              .then(data => {
+                if (data.reload) {
+                    window.location.reload();
+                } else {
+                    showModal(data);
+                }
+              });
+        });
+    });
+});
+</script>
+
+<script>
+    function transferValues() {
+      const selected_city = document.getElementById("city").selectedOptions[0];
+      const selected_district = document.getElementById("district").selectedOptions[0];
+      const selected_clinic = document.getElementById("clinic").selectedOptions[0];
+      const selected_hospital = document.getElementById("hospital").selectedOptions[0];
+      const selected_examination = document.getElementById("examination").selectedOptions[0];
+      const selected_doctor = document.getElementById("doctor").selectedOptions[0];
+
+      document.getElementsByName("check_city_text")[0].value = selected_city.text;
+      document.getElementsByName("check_district_text")[0].value = selected_district.text;
+      document.getElementsByName("check_clinic_text")[0].value = selected_clinic.text;
+      document.getElementsByName("check_hospital_text")[0].value = selected_hospital.text;
+      document.getElementsByName("check_examination_text")[0].value = selected_examination.text;
+      document.getElementsByName("check_doctor_text")[0].value = selected_doctor.text;
+    }
+
+    window.addEventListener("DOMContentLoaded", transferValues);
+
+    document.getElementById("doctor").addEventListener("change", transferValues);
+    document.getElementById("district").addEventListener("change", transferValues);
+    document.getElementById("clinic").addEventListener("change", transferValues);
+    document.getElementById("hospital").addEventListener("change", transferValues);
+    document.getElementById("examination").addEventListener("change", transferValues);
+    document.getElementById("doctor").addEventListener("change", transferValues);
+</script>
+
+{% endblock %}

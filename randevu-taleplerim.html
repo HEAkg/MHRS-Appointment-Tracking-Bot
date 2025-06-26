@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %} Randevu Taleplerim {% endblock %}
+
+{% block style %}
+
+body{
+display: flex;
+}
+
+.container{
+display: flex;
+flex-direction: column;
+height: 100%;
+width: 100%;
+align-items: center;
+}
+
+section {
+height: 100%;
+width: 90%;
+margin-top: 3.5em;
+}
+
+.table-content {
+height: 500px;
+overflow-x:auto;
+}
+
+table {
+table-layout: fixed;
+width: 100%;
+border-collapse: collapse;
+margin: 2px 0;
+font-size: 0.8rem;
+min-width: 400px;
+box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+border-radius: 10px;
+overflow: hidden;
+font-family: "Arial";
+}
+
+table thead tr {
+background-color: #01a887;
+color: #ffffff;
+text-align: left;
+font-weight: bold;
+}
+
+table th:nth-of-type(1),
+table td:nth-of-type(1){
+width: 2%;
+}
+
+{
+width: 8%;
+}
+
+table th {
+padding: 12px 13px;
+}
+
+table td {
+padding: 12px 13px;
+}
+
+table td:last-of-type{
+text-align: center;
+}
+
+table tbody tr {
+border-bottom: 1px solid #dddddd;
+line-height: 1rem;
+}
+
+table tbody tr:nth-of-type(even) {
+background-color: #f3f3f3;
+}
+
+table tbody tr:last-of-type {
+border-bottom: 2px solid #01a887;
+}
+
+table tbody tr:hover {
+background-color: #def4f7;
+color: #01a887;
+}
+
+table caption {
+font-size: 2rem;
+margin-bottom: 1em;
+font-weight: bold;
+color: #d64343;
+font-family: "Tahoma", "sans-serif";
+}
+
+table input[type="submit"]{
+padding: 5px 12px;
+background-color: #3cb854;
+color: white;
+border: none;
+border-radius: 4px;
+}
+
+#empty-result {
+text-align: center;
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+}
+
+.flash {
+background-color: #1c8bc4;
+}
+
+{% endblock %}
+
+{% block content %}
+
+{% include "sidebar.html" %}
+
+{% include "logout.html" %}
+
+<div class="container">
+    <section id="my_appointment_requests">
+        <div class="table-header">
+            <table border="1">
+                <caption>RANDEVU TALEPLERİM</caption>
+                <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Şehir</th>
+                    <th>İlçe</th>
+                    <th>Klinik</th>
+                    <th>Hastane</th>
+                    <th>Muayene Yeri</th>
+                    <th>Doktor</th>
+                    <th>Tarih</th>
+                    <th>Durum</th>
+                    <th>İptal/Sil</th>
+                </tr>
+                </thead>
+            </table>
+        </div>
+        <div class="table-content">
+            {% if appointment_requests.count() > 0 %}
+            <table>
+                <tbody>
+                {% for appointment_request in appointment_requests %}
+                <tr>
+                    <td>
+                        <form id="form{{loop.index}}" method="POST"><input type="hidden" name="req-id"
+                                                                           value="{{ appointment_request.id }}"></form>
+                        {{loop.index}}
+                    </td>
+                    <td>{{ appointment_request.city_text }}</td>
+                    <td>{{ appointment_request.district_text }}</td>
+                    <td>{{ appointment_request.clinic_text }}</td>
+                    <td>{{ appointment_request.hospital_text }}</td>
+                    <td>{{ appointment_request.examination_text }}</td>
+                    <td>{{ appointment_request.doctor_text }}</td>
+                    <td>{{ appointment_request.start_date ~ ' - ' ~ appointment_request.end_date}}</td>
+                    <td>{{ 'Kontrol Ediliyor (' ~ appointment_request.interval ~ ' dk.)' if appointment_request.status else 'Bulundu' }}</td>
+                    <td>
+                        <input form="form{{loop.index}}" type="submit" name="req-del" value="Sil">
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div id="empty-result">
+                <h3>HİÇ RANDEVU TALEBİ YOK</h3>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+
+{% endblock %}
